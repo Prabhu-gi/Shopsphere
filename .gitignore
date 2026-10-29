@@ -36,4 +36,8 @@ Thumbs.db
 # Storage / uploads in dev
 uploads/
 **/uploads/
+data/
+**/data/
+*.mv.db
+*.trace.db
 
