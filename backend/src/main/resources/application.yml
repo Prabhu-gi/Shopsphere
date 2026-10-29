@@ -9,6 +9,8 @@ spring:
     name: shopsphere-backend
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
+  cache:
+    type: ${SPRING_CACHE_TYPE:simple}
   servlet:
     multipart:
       max-file-size: 10MB

@@ -4,9 +4,11 @@ import { HomePage } from '../pages/public/HomePage';
 import { LoginPage } from '../pages/public/LoginPage';
 import { RegisterPage } from '../pages/public/RegisterPage';
 import { ProductListingPage } from '../pages/public/ProductListingPage';
+import { ProductDetailPage } from '../pages/public/ProductDetailPage';
 import { CartPage } from '../pages/customer/CartPage';
 import { ProfilePage } from '../pages/customer/ProfilePage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
+import { AdminProductsPage } from '../pages/admin/AdminProductsPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 export const AppRoutes = () => {
@@ -15,6 +17,7 @@ export const AppRoutes = () => {
       {/* Public Routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/products" element={<ProductListingPage />} />
+      <Route path="/products/:idOrSlug" element={<ProductDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
@@ -56,10 +59,17 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/products"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminProductsPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
-

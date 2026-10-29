@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ShoppingBag, User, LogOut, LayoutDashboard, MapPin, Search } from 'lucide-react';
+import { ShoppingBag, User, LogOut, LayoutDashboard, MapPin, Search, Layers } from 'lucide-react';
 
 export const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -99,13 +99,22 @@ export const Navbar = () => {
                     </div>
 
                     {isAdmin && (
-                      <Link
-                        to="/admin/dashboard"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                      >
-                        <LayoutDashboard className="w-4 h-4" /> Admin Dashboard
-                      </Link>
+                      <>
+                        <Link
+                          to="/admin/dashboard"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                        >
+                          <LayoutDashboard className="w-4 h-4" /> Admin Dashboard
+                        </Link>
+                        <Link
+                          to="/admin/products"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                        >
+                          <Layers className="w-4 h-4" /> Manage Catalog
+                        </Link>
+                      </>
                     )}
 
                     <Link
