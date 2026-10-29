@@ -19,8 +19,28 @@ export default {
           light: '#f8fafc',
           accent: '#3b82f6',
         }
-      }
+      },
+      keyframes: {
+        slideIn: {
+          '0%': { transform: 'translateY(1rem)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        scaleUp: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+      },
+      animation: {
+        'slide-in': 'slideIn 0.2s ease-out',
+        'fade-in': 'fadeIn 0.15s ease-out',
+        'scale-up': 'scaleUp 0.15s ease-out',
+      },
     },
   },
   plugins: [],
 }
+

@@ -112,6 +112,32 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("handleHttpMessageNotReadable_returnsBadRequest")
+    void handleHttpMessageNotReadable_returnsBadRequest() {
+        org.springframework.http.converter.HttpMessageNotReadableException ex =
+                new org.springframework.http.converter.HttpMessageNotReadableException("Malformed JSON");
+
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleHttpMessageNotReadable(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).contains("Malformed JSON request body");
+    }
+
+    @Test
+    @DisplayName("handleMethodArgumentTypeMismatch_returnsBadRequest")
+    void handleMethodArgumentTypeMismatch_returnsBadRequest() {
+        org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex =
+                new org.springframework.web.method.annotation.MethodArgumentTypeMismatchException(
+                        "abc", Long.class, "id", null, null
+                );
+
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleMethodArgumentTypeMismatch(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).contains("Parameter 'id' should be of type 'Long'");
+    }
+
+    @Test
     @DisplayName("handleGenericException_returnsInternalServerError")
     void handleGenericException_returnsInternalServerError() {
         RuntimeException ex = new RuntimeException("Unexpected runtime error");

@@ -30,7 +30,8 @@ api.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          const res = await axios.post('/api/v1/auth/refresh', { refreshToken });
+          const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+          const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
           const newAccessToken = res.data.data.accessToken;
           const newRefreshToken = res.data.data.refreshToken;
 
@@ -56,3 +57,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

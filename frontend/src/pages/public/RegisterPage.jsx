@@ -39,7 +39,7 @@ export const RegisterPage = () => {
       navigate('/');
     } catch (err) {
       const fieldErrors = err.response?.data?.fieldErrors;
-      if (fieldErrors) {
+      if (fieldErrors && Object.keys(fieldErrors).length > 0) {
         const firstErrorKey = Object.keys(fieldErrors)[0];
         showToast(fieldErrors[firstErrorKey], 'error');
       } else {
@@ -165,3 +165,4 @@ export const RegisterPage = () => {
     </div>
   );
 };
+

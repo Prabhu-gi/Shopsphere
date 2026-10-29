@@ -8,7 +8,7 @@ import { AppRoutes } from './routes/AppRoutes';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ToastProvider>
         <AuthProvider>
           <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
@@ -25,3 +25,4 @@ function App() {
 }
 
 export default App;
+

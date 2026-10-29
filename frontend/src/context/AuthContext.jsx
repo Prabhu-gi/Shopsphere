@@ -64,13 +64,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem('shopsphere_refresh_token');
-    await authApi.logout(refreshToken);
-    localStorage.removeItem('shopsphere_access_token');
-    localStorage.removeItem('shopsphere_refresh_token');
-    localStorage.removeItem('shopsphere_user');
-    setAccessToken(null);
-    setUser(null);
+    try {
+      const refreshToken = localStorage.getItem('shopsphere_refresh_token');
+      if (refreshToken) {
+        await authApi.logout(refreshToken);
+      }
+    } catch {
+      // Continue cleanup even if server unreachable
+    } finally {
+      localStorage.removeItem('shopsphere_access_token');
+      localStorage.removeItem('shopsphere_refresh_token');
+      localStorage.removeItem('shopsphere_user');
+      setAccessToken(null);
+      setUser(null);
+    }
   };
 
   const updateUser = (updatedData) => {
@@ -110,3 +117,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

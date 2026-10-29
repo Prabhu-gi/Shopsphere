@@ -58,14 +58,14 @@ export const LoginPage = () => {
           <button
             type="button"
             onClick={() => fillCredentials('admin@shopsphere.com', 'Admin@123')}
-            className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 shadow-2xs"
+            className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 shadow-xs"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Fill Admin
           </button>
           <button
             type="button"
             onClick={() => fillCredentials('customer@shopsphere.com', 'Password@123')}
-            className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 shadow-2xs"
+            className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 shadow-xs"
           >
             <User className="w-3.5 h-3.5 text-blue-600" /> Fill Customer
           </button>
@@ -120,3 +120,4 @@ export const LoginPage = () => {
     </div>
   );
 };
+
