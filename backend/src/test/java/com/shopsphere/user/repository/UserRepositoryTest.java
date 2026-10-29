@@ -45,3 +45,4 @@ class UserRepositoryTest {
         assertThat(userRepository.existsByEmail("nonexistent@shopsphere.com")).isFalse();
     }
 }
+

@@ -24,3 +24,4 @@ public class UserProfileResponse {
     private UserStatus status;
     private LocalDateTime createdAt;
 }
+

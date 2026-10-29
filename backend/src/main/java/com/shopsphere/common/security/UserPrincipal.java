@@ -69,3 +69,4 @@ public class UserPrincipal implements UserDetails {
         return status == UserStatus.ACTIVE;
     }
 }
+

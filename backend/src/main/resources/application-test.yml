@@ -37,3 +37,4 @@ app:
 logging:
   level:
     com.shopsphere: INFO
+

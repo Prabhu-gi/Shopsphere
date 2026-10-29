@@ -29,3 +29,4 @@ public interface AddressMapper {
     @Mapping(target = "createdAt", ignore = true)
     void updateEntityFromDto(AddressRequest request, @MappingTarget Address address);
 }
+

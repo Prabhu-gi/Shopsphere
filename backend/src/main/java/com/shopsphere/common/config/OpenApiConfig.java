@@ -35,3 +35,4 @@ public class OpenApiConfig {
                                         .description("Enter your JWT bearer token in the format: Bearer <token>")));
     }
 }
+

@@ -26,3 +26,4 @@ logging:
   level:
     com.shopsphere: DEBUG
     org.springframework.security: INFO
+

@@ -22,3 +22,4 @@ public class AuthResponse {
     private String lastName;
     private Role role;
 }
+

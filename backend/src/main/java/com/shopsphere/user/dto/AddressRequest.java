@@ -47,3 +47,4 @@ public class AddressRequest {
     @Builder.Default
     private Boolean isDefault = false;
 }
+

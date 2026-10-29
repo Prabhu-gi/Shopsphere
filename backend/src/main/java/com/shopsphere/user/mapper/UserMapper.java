@@ -35,3 +35,4 @@ public interface UserMapper {
     @Mapping(target = "updatedAt", ignore = true)
     void updateUserFromDto(UserUpdateRequest dto, @MappingTarget User user);
 }
+

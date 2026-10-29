@@ -88,3 +88,4 @@ class CustomUserDetailsServiceTest {
                 .isInstanceOf(UsernameNotFoundException.class);
     }
 }
+

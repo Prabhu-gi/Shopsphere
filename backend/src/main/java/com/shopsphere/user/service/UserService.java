@@ -9,3 +9,4 @@ public interface UserService {
     UserProfileResponse updateCurrentUserProfile(Long userId, UserUpdateRequest request);
     User getUserById(Long userId);
 }
+

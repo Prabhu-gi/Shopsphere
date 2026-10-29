@@ -5,3 +5,4 @@ CREATE DATABASE IF NOT EXISTS shopsphere_test_db CHARACTER SET utf8mb4 COLLATE u
 GRANT ALL PRIVILEGES ON shopsphere_db.* TO 'shopsphere'@'%';
 GRANT ALL PRIVILEGES ON shopsphere_test_db.* TO 'shopsphere'@'%';
 FLUSH PRIVILEGES;
+

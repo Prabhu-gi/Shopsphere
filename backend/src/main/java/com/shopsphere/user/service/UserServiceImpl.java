@@ -43,3 +43,4 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 }
+

@@ -7,3 +7,4 @@ public class BadRequestException extends ApiException {
         super(message, HttpStatus.BAD_REQUEST);
     }
 }
+

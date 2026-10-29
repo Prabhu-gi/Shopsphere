@@ -12,3 +12,4 @@ public interface AddressService {
     void deleteAddress(Long userId, Long addressId);
     AddressResponse setDefaultAddress(Long userId, Long addressId);
 }
+

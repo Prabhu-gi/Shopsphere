@@ -7,3 +7,4 @@ public class RateLimitExceededException extends ApiException {
         super(message, HttpStatus.TOO_MANY_REQUESTS);
     }
 }
+
