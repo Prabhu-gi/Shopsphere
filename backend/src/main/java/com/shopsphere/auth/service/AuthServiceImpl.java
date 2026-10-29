@@ -46,12 +46,13 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse register(RegisterRequest request, String clientIp) {
         rateLimiterService.checkRateLimit("register:" + clientIp);
 
-        if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        if (userRepository.existsByEmail(normalizedEmail) || userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new BadRequestException("Email is already registered: " + request.getEmail());
         }
 
         User user = userMapper.toEntity(request);
-        user.setEmail(request.getEmail().toLowerCase().trim());
+        user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.CUSTOMER);
         user.setStatus(UserStatus.ACTIVE);
@@ -85,9 +86,10 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request, String clientIp) {
         rateLimiterService.checkRateLimit("login:" + clientIp);
 
+        String cleanEmail = request.getEmail().trim();
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail().toLowerCase().trim(),
+                        cleanEmail,
                         request.getPassword()
                 )
         );
@@ -167,4 +169,3 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenRepository.save(refreshToken);
     }
 }
-

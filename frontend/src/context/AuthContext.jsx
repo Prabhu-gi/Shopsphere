@@ -5,8 +5,12 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('shopsphere_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('shopsphere_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
   });
   const [accessToken, setAccessToken] = useState(() => localStorage.getItem('shopsphere_access_token'));
   const [loading, setLoading] = useState(false);
@@ -14,8 +18,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const res = await authApi.login(email, password);
-      const authData = res.data;
+      const res = await authApi.login(email.trim(), password);
+      const authData = res?.data || res;
+
+      if (!authData?.accessToken) {
+        throw new Error('Authentication response did not contain an access token');
+      }
 
       const userData = {
         id: authData.userId,
@@ -26,7 +34,9 @@ export const AuthProvider = ({ children }) => {
       };
 
       localStorage.setItem('shopsphere_access_token', authData.accessToken);
-      localStorage.setItem('shopsphere_refresh_token', authData.refreshToken);
+      if (authData.refreshToken) {
+        localStorage.setItem('shopsphere_refresh_token', authData.refreshToken);
+      }
       localStorage.setItem('shopsphere_user', JSON.stringify(userData));
 
       setAccessToken(authData.accessToken);
@@ -40,8 +50,16 @@ export const AuthProvider = ({ children }) => {
   const register = async (formData) => {
     setLoading(true);
     try {
-      const res = await authApi.register(formData);
-      const authData = res.data;
+      const payload = {
+        ...formData,
+        email: formData.email ? formData.email.trim() : '',
+      };
+      const res = await authApi.register(payload);
+      const authData = res?.data || res;
+
+      if (!authData?.accessToken) {
+        throw new Error('Registration response did not contain an access token');
+      }
 
       const userData = {
         id: authData.userId,
@@ -52,7 +70,9 @@ export const AuthProvider = ({ children }) => {
       };
 
       localStorage.setItem('shopsphere_access_token', authData.accessToken);
-      localStorage.setItem('shopsphere_refresh_token', authData.refreshToken);
+      if (authData.refreshToken) {
+        localStorage.setItem('shopsphere_refresh_token', authData.refreshToken);
+      }
       localStorage.setItem('shopsphere_user', JSON.stringify(userData));
 
       setAccessToken(authData.accessToken);
@@ -117,4 +137,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

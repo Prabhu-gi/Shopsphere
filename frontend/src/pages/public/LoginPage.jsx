@@ -1,43 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Lock, Mail, ArrowRight, ShieldCheck, User } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, User, AlertCircle } from 'lucide-react';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState(false);
   const { login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === 'true') {
+      setSessionExpiredNotice(true);
+    }
+  }, [location.search]);
+
   const from = location.state?.from?.pathname || '/';
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email || !password) {
+  const performLogin = async (userEmail, userPassword) => {
+    if (!userEmail || !userPassword) {
       showToast('Please provide both email and password', 'error');
       return;
     }
 
     setSubmitting(true);
     try {
-      await login(email, password);
-      showToast('Logged in successfully!');
-      navigate(from, { replace: true });
+      const loggedInUser = await login(userEmail, userPassword);
+      showToast(`Welcome back, ${loggedInUser.firstName}!`);
+      
+      // If logging in as admin and destination was generic home, direct to admin products
+      if (loggedInUser.role === 'ADMIN' && from === '/') {
+        navigate('/admin/products', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid email or password';
+      let msg = 'Invalid email or password';
+      if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        msg = 'Cannot connect to backend server. Please verify backend is running on port 8080.';
+      } else if (err.message) {
+        msg = err.message;
+      }
       showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const fillCredentials = (userEmail, userPassword) => {
-    setEmail(userEmail);
-    setPassword(userPassword);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    performLogin(email, password);
+  };
+
+  const handleQuickLogin = (quickEmail, quickPassword) => {
+    setEmail(quickEmail);
+    setPassword(quickPassword);
+    performLogin(quickEmail, quickPassword);
   };
 
   return (
@@ -53,25 +79,39 @@ export const LoginPage = () => {
           </p>
         </div>
 
-        {/* Demo Fast Logins */}
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex flex-col sm:flex-row gap-2">
-          <button
-            type="button"
-            onClick={() => fillCredentials('admin@shopsphere.com', 'Admin@123')}
-            className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 shadow-xs"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Fill Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => fillCredentials('customer@shopsphere.com', 'Password@123')}
-            className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-1.5 shadow-xs"
-          >
-            <User className="w-3.5 h-3.5 text-blue-600" /> Fill Customer
-          </button>
+        {sessionExpiredNotice && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+            <span>Your session has expired. Please sign in again to continue.</span>
+          </div>
+        )}
+
+        {/* Demo Fast Logins with 1-click execution */}
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+            Demo 1-Click Fast Sign-In
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => handleQuickLogin('admin@shopsphere.com', 'Admin@123')}
+              className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 flex items-center justify-center gap-1.5 shadow-xs transition disabled:opacity-50"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Sign In as Admin
+            </button>
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => handleQuickLogin('customer@shopsphere.com', 'Password@123')}
+              className="flex-1 text-xs py-2 px-3 rounded-lg bg-white border border-gray-300 font-semibold text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 flex items-center justify-center gap-1.5 shadow-xs transition disabled:opacity-50"
+            >
+              <User className="w-3.5 h-3.5 text-blue-600" /> Sign In as Customer
+            </button>
+          </div>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
@@ -120,4 +160,3 @@ export const LoginPage = () => {
     </div>
   );
 };
-

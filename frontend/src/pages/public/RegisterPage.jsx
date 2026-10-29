@@ -34,7 +34,10 @@ export const RegisterPage = () => {
 
     setSubmitting(true);
     try {
-      await register(formData);
+      await register({
+        ...formData,
+        email: formData.email.trim(),
+      });
       showToast('Account registered successfully! Welcome to ShopSphere.');
       navigate('/');
     } catch (err) {
@@ -43,7 +46,14 @@ export const RegisterPage = () => {
         const firstErrorKey = Object.keys(fieldErrors)[0];
         showToast(fieldErrors[firstErrorKey], 'error');
       } else {
-        const msg = err.response?.data?.message || 'Registration failed';
+        let msg = 'Registration failed';
+        if (err.response?.data?.message) {
+          msg = err.response.data.message;
+        } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+          msg = 'Cannot connect to backend server. Please verify backend is running on port 8080.';
+        } else if (err.message) {
+          msg = err.message;
+        }
         showToast(msg, 'error');
       }
     } finally {
@@ -165,4 +175,3 @@ export const RegisterPage = () => {
     </div>
   );
 };
-

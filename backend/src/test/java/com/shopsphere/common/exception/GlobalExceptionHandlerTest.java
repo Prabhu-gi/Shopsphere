@@ -100,6 +100,22 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("handleAuthenticationException_withDisabledAndLocked_returnsUnauthorized")
+    void handleAuthenticationException_withDisabledAndLocked_returnsUnauthorized() {
+        org.springframework.security.authentication.DisabledException disabledEx =
+                new org.springframework.security.authentication.DisabledException("Disabled");
+        ResponseEntity<ErrorResponse> disabledRes = exceptionHandler.handleAuthenticationException(disabledEx, request);
+        assertThat(disabledRes.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(disabledRes.getBody().getMessage()).contains("disabled");
+
+        org.springframework.security.authentication.LockedException lockedEx =
+                new org.springframework.security.authentication.LockedException("Locked");
+        ResponseEntity<ErrorResponse> lockedRes = exceptionHandler.handleAuthenticationException(lockedEx, request);
+        assertThat(lockedRes.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(lockedRes.getBody().getMessage()).contains("locked");
+    }
+
+    @Test
     @DisplayName("handleAccessDenied_returnsForbidden")
     void handleAccessDenied_returnsForbidden() {
         AccessDeniedException ex = new AccessDeniedException("Access denied");
