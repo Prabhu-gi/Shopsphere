@@ -1,0 +1,38 @@
+# Compiled class files and build artifacts
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+logs/
+
+# Node & Frontend
+node_modules/
+**/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+*.env
+!.env.example
+
+# IDE & OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Storage / uploads in dev
+uploads/
+**/uploads/

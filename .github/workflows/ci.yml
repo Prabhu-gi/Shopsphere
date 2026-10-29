@@ -1,0 +1,82 @@
+name: ShopSphere CI Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  backend-build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: shopsphere_db
+          MYSQL_USER: shopsphere
+          MYSQL_PASSWORD: shopsphere_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Backend Tests & JaCoCo Coverage Check
+        working-directory: ./backend
+        run: mvn clean verify -Ptest
+        env:
+          DB_HOST: localhost
+          DB_PORT: 3306
+          DB_NAME: shopsphere_db
+          DB_USERNAME: shopsphere
+          DB_PASSWORD: shopsphere_password
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Upload JaCoCo Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco/
+
+  frontend-build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci || npm install
+
+      - name: Run Frontend Tests and Build
+        working-directory: ./frontend
+        run: |
+          npm run test --if-present
+          npm run build
