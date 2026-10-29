@@ -33,139 +33,135 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final RateLimiterService rateLimiterService;
-    private final UserMapper userMapper;
+        private final UserRepository userRepository;
+        private final RefreshTokenRepository refreshTokenRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final AuthenticationManager authenticationManager;
+        private final JwtTokenProvider jwtTokenProvider;
+        private final RateLimiterService rateLimiterService;
+        private final UserMapper userMapper;
 
-    @Override
-    @Transactional
-    public AuthResponse register(RegisterRequest request, String clientIp) {
-        rateLimiterService.checkRateLimit("register:" + clientIp);
+        @Override
+        @Transactional
+        public AuthResponse register(RegisterRequest request, String clientIp) {
+                rateLimiterService.checkRateLimit("register:" + clientIp);
 
-        String normalizedEmail = request.getEmail().toLowerCase().trim();
-        if (userRepository.existsByEmail(normalizedEmail) || userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-            throw new BadRequestException("Email is already registered: " + request.getEmail());
+                String normalizedEmail = request.getEmail().toLowerCase().trim();
+                if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+                        throw new BadRequestException("Email is already registered: " + request.getEmail());
+                }
+
+                User user = userMapper.toEntity(request);
+                user.setEmail(normalizedEmail);
+                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+                user.setRole(Role.CUSTOMER);
+                user.setStatus(UserStatus.ACTIVE);
+
+                User savedUser = userRepository.save(user);
+                log.info("Registered new customer with ID: {} and email: {}", savedUser.getId(), savedUser.getEmail());
+
+                String accessToken = jwtTokenProvider.generateAccessTokenForUser(
+                                savedUser.getId(),
+                                savedUser.getEmail(),
+                                savedUser.getRole().name(),
+                                savedUser.getFirstName() + " " + savedUser.getLastName());
+
+                RefreshToken refreshToken = createRefreshToken(savedUser);
+
+                return AuthResponse.builder()
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken.getToken())
+                                .tokenType("Bearer")
+                                .userId(savedUser.getId())
+                                .email(savedUser.getEmail())
+                                .firstName(savedUser.getFirstName())
+                                .lastName(savedUser.getLastName())
+                                .role(savedUser.getRole())
+                                .build();
         }
 
-        User user = userMapper.toEntity(request);
-        user.setEmail(normalizedEmail);
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.CUSTOMER);
-        user.setStatus(UserStatus.ACTIVE);
+        @Override
+        @Transactional
+        public AuthResponse login(LoginRequest request, String clientIp) {
+                rateLimiterService.checkRateLimit("login:" + clientIp);
 
-        User savedUser = userRepository.save(user);
-        log.info("Registered new customer with ID: {} and email: {}", savedUser.getId(), savedUser.getEmail());
+                String cleanEmail = request.getEmail().trim();
+                Authentication authentication = authenticationManager.authenticate(
+                                new UsernamePasswordAuthenticationToken(
+                                                cleanEmail,
+                                                request.getPassword()));
 
-        String accessToken = jwtTokenProvider.generateAccessTokenForUser(
-                savedUser.getId(),
-                savedUser.getEmail(),
-                savedUser.getRole().name(),
-                savedUser.getFirstName() + " " + savedUser.getLastName()
-        );
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                String accessToken = jwtTokenProvider.generateAccessToken(authentication);
 
-        RefreshToken refreshToken = createRefreshToken(savedUser);
+                User user = userRepository.findById(userPrincipal.getId())
+                                .orElseThrow(() -> new UnauthorizedException("User not found"));
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .tokenType("Bearer")
-                .userId(savedUser.getId())
-                .email(savedUser.getEmail())
-                .firstName(savedUser.getFirstName())
-                .lastName(savedUser.getLastName())
-                .role(savedUser.getRole())
-                .build();
-    }
+                RefreshToken refreshToken = createRefreshToken(user);
 
-    @Override
-    @Transactional
-    public AuthResponse login(LoginRequest request, String clientIp) {
-        rateLimiterService.checkRateLimit("login:" + clientIp);
+                log.info("User {} successfully logged in", user.getEmail());
 
-        String cleanEmail = request.getEmail().trim();
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        cleanEmail,
-                        request.getPassword()
-                )
-        );
-
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        String accessToken = jwtTokenProvider.generateAccessToken(authentication);
-
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-
-        RefreshToken refreshToken = createRefreshToken(user);
-
-        log.info("User {} successfully logged in", user.getEmail());
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .tokenType("Bearer")
-                .userId(user.getId())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .role(user.getRole())
-                .build();
-    }
-
-    @Override
-    @Transactional
-    public AuthResponse refreshToken(RefreshTokenRequest request) {
-        RefreshToken token = refreshTokenRepository.findByToken(request.getRefreshToken())
-                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
-
-        if (token.getExpiryDate().isBefore(Instant.now())) {
-            refreshTokenRepository.delete(token);
-            throw new UnauthorizedException("Refresh token was expired. Please sign in again.");
+                return AuthResponse.builder()
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken.getToken())
+                                .tokenType("Bearer")
+                                .userId(user.getId())
+                                .email(user.getEmail())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
+                                .role(user.getRole())
+                                .build();
         }
 
-        User user = token.getUser();
-        String accessToken = jwtTokenProvider.generateAccessTokenForUser(
-                user.getId(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getFirstName() + " " + user.getLastName()
-        );
+        @Override
+        @Transactional
+        public AuthResponse refreshToken(RefreshTokenRequest request) {
+                RefreshToken token = refreshTokenRepository.findByToken(request.getRefreshToken())
+                                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
-        // Rotate refresh token
-        refreshTokenRepository.delete(token);
-        RefreshToken newRefreshToken = createRefreshToken(user);
+                if (token.getExpiryDate().isBefore(Instant.now())) {
+                        refreshTokenRepository.delete(token);
+                        throw new UnauthorizedException("Refresh token was expired. Please sign in again.");
+                }
 
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(newRefreshToken.getToken())
-                .tokenType("Bearer")
-                .userId(user.getId())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .role(user.getRole())
-                .build();
-    }
+                User user = token.getUser();
+                String accessToken = jwtTokenProvider.generateAccessTokenForUser(
+                                user.getId(),
+                                user.getEmail(),
+                                user.getRole().name(),
+                                user.getFirstName() + " " + user.getLastName());
 
-    @Override
-    @Transactional
-    public void logout(String refreshToken) {
-        if (refreshToken != null && !refreshToken.isBlank()) {
-            refreshTokenRepository.deleteByToken(refreshToken);
-            log.info("Successfully revoked refresh token");
+                // Rotate refresh token
+                refreshTokenRepository.delete(token);
+                RefreshToken newRefreshToken = createRefreshToken(user);
+
+                return AuthResponse.builder()
+                                .accessToken(accessToken)
+                                .refreshToken(newRefreshToken.getToken())
+                                .tokenType("Bearer")
+                                .userId(user.getId())
+                                .email(user.getEmail())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
+                                .role(user.getRole())
+                                .build();
         }
-    }
 
-    private RefreshToken createRefreshToken(User user) {
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(jwtTokenProvider.getRefreshExpirationMs()))
-                .build();
-        return refreshTokenRepository.save(refreshToken);
-    }
+        @Override
+        @Transactional
+        public void logout(String refreshToken) {
+                if (refreshToken != null && !refreshToken.isBlank()) {
+                        refreshTokenRepository.deleteByToken(refreshToken);
+                        log.info("Successfully revoked refresh token");
+                }
+        }
+
+        private RefreshToken createRefreshToken(User user) {
+                RefreshToken refreshToken = RefreshToken.builder()
+                                .user(user)
+                                .token(UUID.randomUUID().toString())
+                                .expiryDate(Instant.now().plusMillis(jwtTokenProvider.getRefreshExpirationMs()))
+                                .build();
+                return refreshTokenRepository.save(refreshToken);
+        }
 }

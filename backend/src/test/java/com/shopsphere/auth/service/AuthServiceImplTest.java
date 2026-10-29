@@ -100,7 +100,7 @@ class AuthServiceImplTest {
     @DisplayName("givenValidRegistration_whenRegister_thenSuccessAndReturnsTokens")
     void givenValidRegistration_whenRegister_thenSuccessAndReturnsTokens() {
         // Given
-        given(userRepository.existsByEmail("test@example.com")).willReturn(false);
+        given(userRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
         given(userMapper.toEntity(registerRequest)).willReturn(new User());
         given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
         given(userRepository.save(any(User.class))).willReturn(sampleUser);
@@ -129,7 +129,7 @@ class AuthServiceImplTest {
     @DisplayName("givenDuplicateEmail_whenRegister_thenThrowsBadRequestException")
     void givenDuplicateEmail_whenRegister_thenThrowsBadRequestException() {
         // Given
-        given(userRepository.existsByEmail("test@example.com")).willReturn(true);
+        given(userRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(true);
 
         // When / Then
         assertThatThrownBy(() -> authService.register(registerRequest, "127.0.0.1"))

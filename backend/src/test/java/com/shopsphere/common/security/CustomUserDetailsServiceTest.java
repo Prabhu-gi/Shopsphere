@@ -47,7 +47,7 @@ class CustomUserDetailsServiceTest {
     @Test
     @DisplayName("givenExistingEmail_whenLoadUserByUsername_thenReturnsUserPrincipal")
     void givenExistingEmail_whenLoadUserByUsername_thenReturnsUserPrincipal() {
-        given(userRepository.findByEmail("user@example.com")).willReturn(Optional.of(sampleUser));
+        given(userRepository.findByEmailIgnoreCase("user@example.com")).willReturn(Optional.of(sampleUser));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername("user@example.com");
 
@@ -62,7 +62,7 @@ class CustomUserDetailsServiceTest {
     @Test
     @DisplayName("givenNonExistingEmail_whenLoadUserByUsername_thenThrowsUsernameNotFound")
     void givenNonExistingEmail_whenLoadUserByUsername_thenThrowsUsernameNotFound() {
-        given(userRepository.findByEmail("missing@example.com")).willReturn(Optional.empty());
+        given(userRepository.findByEmailIgnoreCase("missing@example.com")).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("missing@example.com"))
                 .isInstanceOf(UsernameNotFoundException.class);
